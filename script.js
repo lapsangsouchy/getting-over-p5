@@ -47,14 +47,24 @@ function setup() {
 function draw() {
   background(220);
 
-  /* -------- CAMERA FOLLOW -------- */
-  const screenMid = camY + height * 0.5;
-  const targetCam =
-    player.pos.y < screenMid ? player.pos.y - height * 0.5 : camY;
-  camY += (targetCam - camY) * 0.1; // smoothing factor 0.1
+  /* ───── ONE‑WAY LIFT – CATCH‑BACK CAMERA ───── */
+  const midScreen = height * 0.5; // halfway line
+  const playerScreenY = player.pos.y - camY; // world → screen
+  console.log('PlayerScreen', playerScreenY, 'PlayerPos', player.pos.y);
+  // how far we “want” the camera so the player sits at midScreen
+  const desiredCam = player.pos.y - midScreen;
 
-  push();
-  translate(0, -camY); // everything below scrolls
+  if (playerScreenY < midScreen) {
+    /* ABOVE halfway  →  lift slowly (0.05 = gentle) */
+    camY = lerp(camY, desiredCam, 0.05);
+    console.log('above halfway');
+  } else if (playerScreenY > midScreen) {
+    /* BELOW halfway  →  catch up faster (0.20)      */
+    camY = lerp(camY, desiredCam, 0.2);
+    console.log('below halfway');
+    if (player.pos.y > 500) resetGame(); // fail‑safe
+  }
+  /* ───────────────────────────────────────────── */
 
   /* -------- WORLD UPDATE --------- */
   push();
